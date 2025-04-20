@@ -1,7 +1,9 @@
+import AppLAyout from "./AppLayout";
 
 function Home() {
   return (
     <div>
+      <AppLAyout />
       <h1>
         The best pizza.
         <br />

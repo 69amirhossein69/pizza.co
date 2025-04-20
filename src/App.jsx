@@ -1,31 +1,47 @@
 import React from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./ui/home";
-import Menu from "./features/menu/Menu";
+import Menu, { loader as menuLoader } from "./features/menu/Menu";
 import Cart from "./features/cart/Cart";
-import CreateOrder from "e:/programing/Udemy - The Ultimate React Course 2024 React, Redux & More 2023-11/ultimate-react-course-main/16-fast-react-pizza/final-1-after-tailwind/src/features/order/CreateOrder";
-import Order from "e:/programing/Udemy - The Ultimate React Course 2024 React, Redux & More 2023-11/ultimate-react-course-main/16-fast-react-pizza/final-1-after-tailwind/src/features/order/Order";
+import CreateOrder, {
+  action as createOrderAction,
+} from "./features/order/CreateOrder";
+import Order, { loader as orderLoader } from "./features/order/Order";
+import AppLAyout from "./ui/AppLayout";
+import Error from "./ui/Error";
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Home />,
-  },
-  {
-    path: "/menu",
-    element: <Menu />,
-  },
-  {
-    path: "/cart",
-    element: <Cart />,
-  },
-  {
-    path: "/order/new",
-    element: <CreateOrder />,
-  },
-  {
-    path: "order/:orderId",
-    element: <Order />,
+    element: <AppLAyout />,
+    errorElement: <Error />,
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/menu",
+        element: <Menu />,
+        loader: menuLoader,
+        errorElement: <Error />,
+      },
+      {
+        path: "/cart",
+        element: <Cart />,
+      },
+      {
+        path: "/order/new",
+        element: <CreateOrder />,
+        action: createOrderAction,
+        errorElement: <Error />,
+      },
+      {
+        path: "order/:orderId",
+        element: <Order />,
+        loader: orderLoader,
+        errorElement: <Error />,
+      },
+    ],
   },
 ]);
 
