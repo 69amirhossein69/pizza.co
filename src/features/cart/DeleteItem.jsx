@@ -6,7 +6,7 @@ export default function DeleteItem({ pizzaId }) {
   const dispatch = useDispatch();
 
   function handleDeleteItem() {
-    dispatch(deleteItem({ pizzaId }));
+    dispatch(deleteItem( pizzaId ));
   }
   return (
     <Button onClick={() => handleDeleteItem(pizzaId)} type="small">

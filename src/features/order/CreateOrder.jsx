@@ -1,8 +1,12 @@
-import { _useState } from "react";
+import { useState } from "react";
 import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { createOrder } from "../../services/apiRestaurant";
 import Button from "../../ui/Button";
 import { useSelector } from "react-redux";
+import { clearCart, getCart, getTotalCartPrice } from "../cart/cartSlice";
+import EmptyCart from "../cart/EmptyCart";
+import store from "../../store";
+import { formatCurrency } from "../../utils/helpers";
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -10,38 +14,20 @@ const isValidPhone = (str) =>
     str
   );
 
-const fakeCart = [
-  {
-    pizzaId: 12,
-    name: "Mediterranean",
-    quantity: 2,
-    unitPrice: 16,
-    totalPrice: 32,
-  },
-  {
-    pizzaId: 6,
-    name: "Vegetale",
-    quantity: 1,
-    unitPrice: 13,
-    totalPrice: 13,
-  },
-  {
-    pizzaId: 11,
-    name: "Spinach and Mushroom",
-    quantity: 1,
-    unitPrice: 15,
-    totalPrice: 15,
-  },
-];
-
 function CreateOrder() {
-  // const [withPriority, setWithPriority] = useState(false);
+  const [withPriority, setWithPriority] = useState(false);
   const navigation = useNavigation();
   const isSubmiting = navigation.state === "submitting";
   const formErrors = useActionData();
-  const cart = fakeCart;
   const userName = useSelector((store) => store.user.userName);
+  const cart = useSelector(getCart);
+  const cartPrice = useSelector(getTotalCartPrice);
+  const priorityPrice = withPriority ? cartPrice * 0.2 : 0;
+  const totalPrice = cartPrice + (priorityPrice || 0);
 
+  if (!cart.length) {
+    return <EmptyCart />;
+  }
   return (
     <div className="px-4 py-6">
       <h2 className="mb-8 text-xl font-semibold">Ready to order? Let's go!</h2>
@@ -49,7 +35,13 @@ function CreateOrder() {
       <Form method="post">
         <div className="mb-5 flex gap-2 flex-col sm:flex-row sm:items-center">
           <label className="sm:basis-40">First Name</label>
-          <input className="input grow" type="text" name="customer" defaultValue={userName} required />
+          <input
+            className="input grow"
+            type="text"
+            name="customer"
+            defaultValue={userName}
+            required
+          />
         </div>
 
         <div className="mb-5 flex gap-2 flex-col sm:flex-row sm:items-center">
@@ -82,8 +74,8 @@ function CreateOrder() {
             name="priority"
             id="priority"
             className="h-6 w-6 accent-yellow-500 focus:ring focus:ring-yellow-400 focus:ring-offset-2 focus:outline-none"
-            // value={withPriority}
-            // onChange={(e) => setWithPriority(e.target.checked)}
+            value={withPriority}
+            onChange={(e) => setWithPriority(e.target.checked)}
           />
           <label className="font-medium" htmlFor="priority">
             Want to yo give your order priority?
@@ -97,8 +89,9 @@ function CreateOrder() {
             name="cart"
             value={JSON.stringify(cart)}
           />
+          \
           <Button type="primary" disabled={isSubmiting}>
-            Order now
+            Order now {formatCurrency(totalPrice)}
           </Button>
         </div>
       </Form>
@@ -112,7 +105,7 @@ export async function action({ request }) {
   const order = {
     ...data,
     cart: JSON.parse(data.cart),
-    priority: data.priority === "on",
+    priority: data.priority === "true",
   };
   const errors = {};
   if (!isValidPhone(order.phone)) {
@@ -122,6 +115,8 @@ export async function action({ request }) {
     return errors;
   }
   const newOrder = await createOrder(order);
+
+  store.dispatch(clearCart());
 
   return redirect(`/order/${newOrder.id}`);
 }
